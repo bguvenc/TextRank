@@ -1,11 +1,7 @@
-  library(NLP)
-  library(tm)
-  library(openNLP)
-  library(SnowballC)
-  
-# Similarity function
+
+# Similarity function of textRank
 simil_textRank <- function(x,y){
-  # b is the intersection of common words
+  # b is the intersection of common words, k and p are the length of two sentences  
   b <-Reduce(intersect, list(x,y))
   c<- length(b)-1
   m <- 0
@@ -28,10 +24,15 @@ simil_textRank <- function(x,y){
   
 }
 
+
 #MAIN FRAME
 textRank<-function(){
   
-  doc <- readLines("file.txt")
+  library(NLP)
+  library(tm)
+  library(openNLP)
+  
+  doc <- readLines("text.txt")
   doc <- as.String(doc)
   
   # Word and sentence token annotator 
@@ -62,6 +63,7 @@ textRank<-function(){
     corp_list[[length(corp_list)+1]]<-corp[[i]]
   }
   
+ 
   p <- length(sents(bio_doc))
   m <- matrix(NA, nrow=p, ncol=p)
   simil_trank <- as.data.frame(m)
@@ -76,19 +78,20 @@ textRank<-function(){
   # Calculate pagerank algorithm 
   M = t(simil_trank / rowSums(simil_trank))
   n = nrow(M)
-  
   U = matrix(data=rep(1/n, n^2), nrow=n, ncol=n)
   beta=0.85
   A = beta*M+(1-beta)*U
+  A[is.na(A)] <- 0
+  A[is.infinite(A)] <- 0
   e = eigen(A)
   v <- e$vec[,1]
   v <- as.numeric(v) / sum(as.numeric(v))
   
   #Find N most highest value location in a vector and its value
-  highest<- order(v, decreasing = T)[1:5]
+  highest<- order(v, decreasing = T)[1:10]
   v[highest]
   
-  # sentences with highest eigenvalue
+  # Create list from highest eigenvalue sentences
   summ_list<- list()
   m<-length(highest)
   
@@ -97,6 +100,7 @@ textRank<-function(){
     summ_list[[length(summ_list)+1]]<- sentences[x]
   }
   
-  d<-lapply(summ_list, cat,"", file="textRank.txt", append=TRUE)
-  
+  d<-lapply(summ_list, cat,"", file="summary_textRank.txt", append=TRUE)
+
+
 }
